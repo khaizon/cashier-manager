@@ -23,19 +23,19 @@ export const authOptions: NextAuthOptions = {
 		}),
 	],
 	callbacks: {
-		async jwt({ token, user, account, profile }) {
-			console.log(token, account, user, profile);
+		async jwt({ token, account }) {
 			if (account) {
 				token.accessToken = account?.access_token;
 				token.refreshToken = account?.refresh_token;
+				token.scope = account?.scope;
 			}
 
 			return token;
 		},
-		async session({ session, token, user }) {
+		async session({ session, token }) {
 			session.accessToken = token.accessToken as string;
 			session.refreshToken = token.refreshToken as string;
-
+			session.scope = token.scope as string;
 			return session;
 		},
 	},
