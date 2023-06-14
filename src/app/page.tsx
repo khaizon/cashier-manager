@@ -1,18 +1,30 @@
-"use client"
+import { authOptions } from "@/auth/options";
+import ItemList from "@/components/ItemList";
+import { processExcelResult } from "@/utils/spreadsheets";
 
-import { LoginButton, LogoutButton } from "@/components/buttons";
-import { useSession } from "next-auth/react";
+import { getServerSession } from "next-auth";
+import { headers } from "next/dist/client/components/headers";
 
+const getItems = async () => {
+	const headersList = headers();
 
-export default function Home() {
-  const session = useSession({required: true})
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div style={{
-        maxWidth: '100%', textOverflow:"wrap", wordBreak: "break-all"}}>{JSON.stringify(session)}</div>
-      <h1>Server Session</h1>
-        <LoginButton/>
-        <LogoutButton/>
-    </main>
-  );
+	const response = await fetch(`${process.env.NEXTAUTH_URL}/api/google/sheets`, {
+		headers: {
+			Cookie: headersList.get("cookie") as string,
+		},
+	});
+
+	const jsonResponse = await response.json();
+	return processExcelResult(jsonResponse.values);
+};
+
+export default async function Home() {
+	const session = getServerSession(authOptions);
+	const items = await getItems();
+
+	return (
+		<main className="h-full">
+			<ItemList items={items} />
+		</main>
+	);
 }

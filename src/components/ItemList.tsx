@@ -3,12 +3,15 @@
 import React, { FC } from 'react'
 
 interface ItemListProps {
+  items: CategoryItem[]
 }
 
-const ItemList: FC<ItemListProps> = ({  }) => {
+const ItemList: FC<ItemListProps> = ({  items}) => {
   return (
     <div>
-     ItemList
+     {items.map(item=>(
+      <div key={item.category}>{item.category}</div>
+     ))}
     </div>
   )
 }

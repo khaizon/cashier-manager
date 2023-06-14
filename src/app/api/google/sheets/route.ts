@@ -11,7 +11,8 @@ let auth: OAuth2Client;
 export async function GET(request: NextRequest) {
 	const token = await getToken({ req: request });
 	const session = await getServerSession(authOptions);
-	console.log(session)
+	console.log('SESSION:', session)
+	console.log('TOKEN:',token)
 
 	if (!token) {
 		NextResponse.json({ message: "Unathorized" }, { status: 403 });
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
 	return NextResponse.json(
 		{
-			data: response.data,
+			values: response.data.values,
 		},
 		{
 			status: 200,

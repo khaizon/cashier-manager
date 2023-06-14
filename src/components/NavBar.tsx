@@ -10,7 +10,7 @@ export default function NavBar() {
     return (<>loading</>)
   }
 	return (
-		<div className="overflow-hidden bg-red-100 p-1">
+		<div className="overflow-hidden bg-red-100 p-1 flex gap-5">
 			<div className="h-12 w-12 overflow-hidden rounded-lg">
 				<Image src={data?.user?.image as string} alt="profile picture" width={100} height={100} />
 			</div>
