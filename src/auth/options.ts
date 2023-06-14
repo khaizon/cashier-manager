@@ -1,4 +1,5 @@
 import { NextAuthOptions } from "next-auth";
+import { JWT } from "next-auth/jwt";
 import GoogleProvider from "next-auth/providers/google";
 
 const SCOPES = [
@@ -7,6 +8,46 @@ const SCOPES = [
 	"https://www.googleapis.com/auth/userinfo.profile",
 	"openid",
 ];
+
+async function refreshAccessToken(token: JWT): Promise<JWT> {
+	try {
+		const url =
+			"https://oauth2.googleapis.com/token?" +
+			new URLSearchParams({
+				client_id: process.env.GOOGLE_CLIENT_ID as string,
+				client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
+				grant_type: "refresh_token",
+				refresh_token: token.refreshToken,
+			});
+
+		const response = await fetch(url, {
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			method: "POST",
+		});
+
+		const refreshedTokens = await response.json();
+
+		if (!response.ok) {
+			throw refreshedTokens;
+		}
+
+		return {
+			...token,
+			accessToken: refreshedTokens.access_token,
+			accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+			refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
+		};
+	} catch (error) {
+		console.log(error);
+
+		return {
+			...token,
+			error: "RefreshAccessTokenError",
+		};
+	}
+}
 
 export const authOptions: NextAuthOptions = {
 	providers: [
@@ -23,19 +64,26 @@ export const authOptions: NextAuthOptions = {
 		}),
 	],
 	callbacks: {
-		async jwt({ token, account }) {
+		async jwt({ token, account }): Promise<JWT> {
 			if (account) {
-				token.accessToken = account?.access_token;
-				token.refreshToken = account?.refresh_token;
-				token.scope = account?.scope;
+				return {
+					...token,
+					accessToken: account.access_token,
+					refreshToken: account.refresh_token,
+					accessTokenExpires: Date.now() + account.expires_at * 1000,
+					scope: account.scope,
+				};
+			}
+			if (Date.now() < token.accessTokenExpires) {
+				return token;
 			}
 
-			return token;
+			return refreshAccessToken(token);
 		},
 		async session({ session, token }) {
-			session.accessToken = token.accessToken as string;
-			session.refreshToken = token.refreshToken as string;
-			session.scope = token.scope as string;
+			session.accessToken = token.accessToken;
+			session.scope = token.scope;
+			session.refreshToken = token.refreshToken;
 			return session;
 		},
 	},

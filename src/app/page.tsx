@@ -1,6 +1,6 @@
 "use client"
 
-import { LoginButton } from "@/components/buttons";
+import { LoginButton, LogoutButton } from "@/components/buttons";
 import { useSession } from "next-auth/react";
 
 
@@ -12,6 +12,7 @@ export default function Home() {
         maxWidth: '100%', textOverflow:"wrap", wordBreak: "break-all"}}>{JSON.stringify(session)}</div>
       <h1>Server Session</h1>
         <LoginButton/>
+        <LogoutButton/>
     </main>
   );
 }
